@@ -32,6 +32,10 @@ export class ViewStudentComponent implements OnInit {
       postalAddress: ''
     }
   }
+  isNewStudent = false;
+  header = '';
+
+
   genderList: Gender[] = [];
 
   constructor(private studentService: StudentService,
@@ -45,12 +49,20 @@ export class ViewStudentComponent implements OnInit {
     this.route.paramMap.subscribe(
       (params) => {
         this.studentId = params.get('id');
-
         if (this.studentId) {
-          this.studentService.getStudent(this.studentId).subscribe(
-            (successResponse) => {
-              this.student = successResponse;
-            });
+          if (this.studentId.toLocaleLowerCase() === 'Add'.toLocaleLowerCase()) {
+            //-> new student functionnality
+            this.isNewStudent = true;
+            this.header = 'Add New Student';
+          } else {
+            //-> Existing student functionnality
+            this.isNewStudent = false;
+            this.header = 'Edit Student'
+            this.studentService.getStudent(this.studentId).subscribe(
+              (successResponse) => {
+                this.student = successResponse;
+              });
+          }
           this.genderService.getGenderList().subscribe(
             (successResponse) => {
               this.genderList = successResponse;
@@ -88,6 +100,24 @@ export class ViewStudentComponent implements OnInit {
         }, 2000);
       },
       (errorResponse) => {
+        console.log(errorResponse);
+      }
+    );
+  }
+
+  onAdd(): void {
+    this.studentService.addStudent(this.student).subscribe(
+      (successResponse) => {
+        //Show notification
+        this.snackbar.open('Student added successefully', undefined, {
+          duration: 2000
+        });
+        setTimeout(() => {
+          this.router.navigateByUrl(`students/${successResponse.id}`);
+        }, 2000);
+      },
+      (errorResponse) => {
+        // Log it
         console.log(errorResponse);
       }
     );
